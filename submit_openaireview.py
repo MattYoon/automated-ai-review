@@ -1,15 +1,13 @@
 """
-Submit PDFs from review_pdf_files/ to paperreview.ai and save access tokens.
+Submit PDFs from review_pdf_files/ to openaireview.org and save access tokens.
 
 Usage:
-  python submit_stanford.py                        # all files
-  python submit_stanford.py <start> <end>          # 1-based inclusive range
-  python submit_stanford.py <start> <end> <email>
+  python submit_openaireview.py                        # all files
+  python submit_openaireview.py <start> <end>          # 1-based inclusive range
+  python submit_openaireview.py <start> <end> <email>
 
 Flow per paper:
-  1. POST /api/get-upload-url  -> presigned S3 URL + s3_key
-  2. POST <presigned_url>      -> upload PDF bytes directly to S3
-  3. POST /api/confirm-upload  -> confirm upload, returns token
+  1. POST /review  -> token
 """
 
 import io
@@ -22,7 +20,7 @@ import requests
 import time
 from pypdf import PdfReader, PdfWriter
 
-BASE_URL = "https://paperreview.ai"
+BACKEND_URL = "https://openaireview-backend-947059889174.us-central1.run.app"
 PDF_DIR = "review_pdf_files"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -32,7 +30,7 @@ def truncate_pdf(pdf_bytes: bytes, max_bytes: int = MAX_UPLOAD_BYTES) -> bytes:
     if len(pdf_bytes) <= max_bytes:
         return pdf_bytes
 
-    print(f"PDF is {len(pdf_bytes)} bytes, truncating to 10MBs by dropping pages...")
+    print(f"  PDF is {len(pdf_bytes) / 1024 / 1024:.1f} MB, truncating to 10 MB by dropping pages...")
     reader = PdfReader(io.BytesIO(pdf_bytes))
     total = len(reader.pages)
 
@@ -63,34 +61,21 @@ def get_pdf_files() -> list[str]:
     return [os.path.join(PDF_DIR, f) for f in files]
 
 
-def submit_paper(pdf_path: str, email: str, venue: str = "") -> str:
+def submit_paper(pdf_path: str, email: str) -> str:
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
 
     pdf_bytes = truncate_pdf(pdf_bytes)
     filename = os.path.basename(pdf_path)
 
-    payload = {"filename": filename}
-    if venue:
-        payload["venue"] = venue
-    resp = requests.post(f"{BASE_URL}/api/get-upload-url", json=payload)
-    resp.raise_for_status()
-    data = resp.json()
-    presigned_url = data["presigned_url"]
-    presigned_fields = data["presigned_fields"]
-    s3_key = data["s3_key"]
-
-    form_data = {k: (None, v) for k, v in presigned_fields.items()}
-    form_data["file"] = (filename, pdf_bytes, "application/pdf")
-    put_resp = requests.post(presigned_url, files=form_data)
-    put_resp.raise_for_status()
-
-    confirm_resp = requests.post(
-        f"{BASE_URL}/api/confirm-upload",
-        data={"s3_key": s3_key, "email": email, "venue": venue or None},
+    resp = requests.post(
+        f"{BACKEND_URL}/review",
+        files={"file": (filename, pdf_bytes, "application/pdf")},
+        data={"email": email},
+        timeout=60,
     )
-    confirm_resp.raise_for_status()
-    return confirm_resp.json()["token"]
+    resp.raise_for_status()
+    return resp.json()["token"]
 
 
 def load_tokens(tokens_file: str) -> dict:
@@ -110,16 +95,16 @@ if __name__ == "__main__":
 
     start_idx = int(args[0]) if len(args) >= 1 else None
     end_idx = int(args[1]) if len(args) >= 2 else None
-    user_email = args[2] if len(args) >= 3 else "dkyoon@kaist.ac.kr"
+    user_email = args[2] if len(args) >= 3 else "mattyoon99@gmail.com"
 
     all_pdfs = get_pdf_files()
 
     if start_idx is not None and end_idx is not None:
         selected = all_pdfs[start_idx - 1 : end_idx]
-        tokens_file = f"access_tokens_stanford_{start_idx}_{end_idx}.json"
+        tokens_file = f"access_tokens_openaireview_{start_idx}_{end_idx}.json"
     else:
         selected = all_pdfs
-        tokens_file = "access_tokens_stanford_all.json"
+        tokens_file = "access_tokens_openaireview_all.json"
 
     print(f"Submitting {len(selected)} paper(s)...")
 
@@ -135,12 +120,12 @@ if __name__ == "__main__":
             save_tokens(tokens, tokens_file)
             last_successful_idx = base_start + i
             print(f"[OK] {filename}: {token}")
-            print(f"     {BASE_URL}/review?token={token}")
+            print(f"     https://openaireview.org/results.html?token={token}")
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 429:
                 print(f"[429] Rate limited on {filename}. Stopping.")
                 if last_successful_idx is not None:
-                    new_tokens_file = f"access_tokens_stanford_{base_start}_{last_successful_idx}.json"
+                    new_tokens_file = f"access_tokens_openaireview_{base_start}_{last_successful_idx}.json"
                     os.rename(tokens_file, new_tokens_file)
                     print(f"Tokens saved to {new_tokens_file}")
                 else:
