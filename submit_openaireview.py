@@ -2,8 +2,6 @@
 Submit PDFs from review_pdf_files/ to openaireview.org and save access tokens.
 
 Usage:
-  python submit_openaireview.py                        # all files
-  python submit_openaireview.py <start> <end>          # 1-based inclusive range
   python submit_openaireview.py <start> <end> <email>
 
 Flow per paper:
@@ -93,22 +91,22 @@ def save_tokens(tokens: dict, tokens_file: str):
 if __name__ == "__main__":
     args = sys.argv[1:]
 
-    start_idx = int(args[0]) if len(args) >= 1 else None
-    end_idx = int(args[1]) if len(args) >= 2 else None
-    user_email = args[2] if len(args) >= 3 else "mattyoon99@gmail.com"
+    if len(args) != 3:
+        print("Usage: python submit_openaireview.py <start> <end> <email>")
+        sys.exit(1)
+
+    start_idx = int(args[0])
+    end_idx = int(args[1])
+    user_email = args[2]
 
     all_pdfs = get_pdf_files()
 
-    if start_idx is not None and end_idx is not None:
-        selected = all_pdfs[start_idx - 1 : end_idx]
-        tokens_file = f"access_tokens_openaireview_{start_idx}_{end_idx}.json"
-    else:
-        selected = all_pdfs
-        tokens_file = "access_tokens_openaireview_all.json"
+    selected = all_pdfs[start_idx - 1 : end_idx]
+    tokens_file = f"access_tokens_openaireview_{start_idx}_{end_idx}.json"
 
     print(f"Submitting {len(selected)} paper(s)...")
 
-    base_start = start_idx if start_idx is not None else 1
+    base_start = start_idx
     last_successful_idx = None
 
     tokens = load_tokens(tokens_file)
