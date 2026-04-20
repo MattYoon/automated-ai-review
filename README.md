@@ -2,6 +2,12 @@
 
 Automatically submit papers for AI review and save the results.
 
+## Requirements
+
+```bash
+pip install requests pypdf
+```
+
 ## Usage
 
 Run the submit script first, then the save script.
