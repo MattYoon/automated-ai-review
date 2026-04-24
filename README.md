@@ -10,17 +10,20 @@ pip install requests pypdf
 
 ## Workflow
 
-1. Run the **submit** script --> uploads your assigned papers and saves access tokens locally.
-2. After some time (~1 hour), you will recieve emails that your submission is ready. Then run the **save** script --> uses the tokens to fetch and save the reviews.
+1. Create your own branch.
+2. Run the **submit** script. This uploads your assigned papers and saves access tokens locally.
+3. After some time (~1 hour), you will recieve emails that your submission is ready. Then run the **save** script. This uses the tokens to fetch and save the reviews.
+4. Push to your branch.
+5. Repeat 2-4 every day with new paper indicies.
 
 ## Daily limits
 
-| Platform | Papers/day |
+| Platform | Papers/24h |
 |---|---|
 | paperreview.ai (Stanford) | 5 |
 | openaireview.org | 3 |
 
-You will be assigned a range of paper indexes. Run a batch each day until your range is done. Using a VPN or a different machine may let you run more in a day, but results vary.
+You will be assigned a range of paper indexes. Run a batch each day until your range is done. 
 
 ## Usage
 
@@ -40,6 +43,4 @@ python submit_openaireview.py <start> <end> <email>
 python save_openaireview.py access_tokens/openaireview/<start>_<end>.json
 ```
 
-Tokens are written to `access_tokens/<service>/<start>_<end>.json` and reviews to `reviews/<service>/<start>_<end>.jsonl`.
-
-`<start>` and `<end>` are the index range of papers in `review_pdf_files/` to process. `<email>` is your email address.
+Tokens are written to `access_tokens/<service>/<start>_<end>.json` and reviews to `reviews/<service>/<start>_<end>.jsonl`. If the submission fails due to 429 Error (Rate limit), the `<end>` will be overrided with the last successful index.
