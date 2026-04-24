@@ -14,7 +14,7 @@ pip install requests pypdf
 2. Run the **submit** script. This uploads your assigned papers and saves access tokens locally.
 3. After some time (~1 hour), you will recieve emails that your submission is ready. Then run the **save** script. This uses the tokens to fetch and save the reviews.
 4. Push to your branch.
-5. Repeat 2-4 every day with new paper indicies.
+5. Repeat step 2-4 every day with new paper indicies.
 
 ## Daily limits
 
@@ -34,6 +34,12 @@ Replace `<start>` and `<end>` with some range within your assigned index range, 
 ```bash
 python submit_stanford.py <start> <end> <email>
 python save_stanford.py access_tokens/stanford/<start>_<end>.json
+```
+
+For example,
+```bash
+python submit_stanford.py 1 5 youremail@email.com # saves access_tokens/stanford/1_5.json
+python save_stanford.py access_tokens/stanford/1_5.json # saves reviews/stanford/1_5.jsonl
 ```
 
 ### OpenAI Review (openaireview.org)
