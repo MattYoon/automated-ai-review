@@ -39,6 +39,7 @@ python save_stanford.py access_tokens/stanford/<start>_<end>.json
 For example,
 ```bash
 python submit_stanford.py 1 5 youremail@email.com # saves access_tokens/stanford/1_5.json
+# run below once you've received review ready email (~1 hour).
 python save_stanford.py access_tokens/stanford/1_5.json # saves reviews/stanford/1_5.jsonl
 ```
 
