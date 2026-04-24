@@ -8,8 +8,8 @@ Each output record contains only:
   - "items":  list of comment strings ("title: explanation")
 
 Usage:
-    python save_openaireview.py access_tokens_openaireview_1_2.json
-    python save_openaireview.py access_tokens_openaireview_1_2.json --delay 2.0
+    python save_openaireview.py access_tokens/openaireview/1_2.json
+    python save_openaireview.py access_tokens/openaireview/1_2.json --delay 2.0
 """
 
 import json
@@ -22,6 +22,7 @@ from pathlib import Path
 import requests
 
 BACKEND_URL = "https://openaireview-backend-947059889174.us-central1.run.app"
+REVIEWS_DIR = Path("reviews/openaireview")
 
 
 def fetch_comments(token: str) -> list[str]:
@@ -56,8 +57,9 @@ def main():
         print(f"ERROR: {tokens_path} not found", file=sys.stderr)
         sys.exit(1)
 
-    stem = re.sub(r"^access_tokens_", "reviews_", tokens_path.stem)
-    out_path = tokens_path.with_name(stem + ".jsonl")
+    stem = re.sub(r"^access_tokens_openaireview_", "", tokens_path.stem)
+    REVIEWS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = REVIEWS_DIR / (stem + ".jsonl")
 
     with open(tokens_path) as f:
         token_map = json.load(f)

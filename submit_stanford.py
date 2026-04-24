@@ -15,6 +15,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 import requests
 import time
@@ -22,6 +23,7 @@ from pypdf import PdfReader, PdfWriter
 
 BASE_URL = "https://paperreview.ai"
 PDF_DIR = "review_pdf_files"
+TOKENS_DIR = Path("access_tokens/stanford")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
@@ -117,7 +119,8 @@ if __name__ == "__main__":
     all_pdfs = get_pdf_files()
 
     selected = all_pdfs[start_idx - 1 : end_idx]
-    tokens_file = f"access_tokens_stanford_{start_idx}_{end_idx}.json"
+    TOKENS_DIR.mkdir(parents=True, exist_ok=True)
+    tokens_file = str(TOKENS_DIR / f"{start_idx}_{end_idx}.json")
 
     print(f"Submitting {len(selected)} paper(s)...")
 
@@ -138,7 +141,7 @@ if __name__ == "__main__":
             if e.response is not None and e.response.status_code == 429:
                 print(f"[429] Rate limited on {filename}. Stopping.")
                 if last_successful_idx is not None:
-                    new_tokens_file = f"access_tokens_stanford_{base_start}_{last_successful_idx}.json"
+                    new_tokens_file = str(TOKENS_DIR / f"{base_start}_{last_successful_idx}.json")
                     os.rename(tokens_file, new_tokens_file)
                     print(f"Tokens saved to {new_tokens_file}")
                 else:

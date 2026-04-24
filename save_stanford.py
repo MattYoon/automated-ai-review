@@ -8,8 +8,8 @@ Each output record contains only:
   - "items":  list of weakness bullet-point strings
 
 Usage:
-    python save_stanford.py access_tokens_stanford_1_5.json
-    python save_stanford.py access_tokens_stanford_1_5.json --delay 2.0
+    python save_stanford.py access_tokens/stanford/1_5.json
+    python save_stanford.py access_tokens/stanford/1_5.json --delay 2.0
 """
 
 import json
@@ -22,6 +22,7 @@ from pathlib import Path
 import requests
 
 BASE_URL = "https://paperreview.ai"
+REVIEWS_DIR = Path("reviews/stanford")
 
 
 def fetch_weaknesses(token: str) -> list[str]:
@@ -54,8 +55,9 @@ def main():
         print(f"ERROR: {tokens_path} not found", file=sys.stderr)
         sys.exit(1)
 
-    stem = re.sub(r"^access_tokens_", "reviews_", tokens_path.stem)
-    out_path = tokens_path.with_name(stem + ".jsonl")
+    stem = re.sub(r"^access_tokens_stanford_", "", tokens_path.stem)
+    REVIEWS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = REVIEWS_DIR / (stem + ".jsonl")
 
     with open(tokens_path) as f:
         token_map = json.load(f)
