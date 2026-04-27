@@ -10,7 +10,7 @@ pip install requests pypdf
 
 ## Workflow
 
-1. Create your own branch.
+1. Fork the repo and create your own branch.
 2. Run the **submit** script. This uploads your assigned papers and saves access tokens locally.
 3. After some time (~1 hour), you will recieve emails that your submission is ready. Then run the **save** script. This uses the tokens to fetch and save the reviews.
 4. Push to your branch.
